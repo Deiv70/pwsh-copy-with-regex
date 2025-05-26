@@ -1,17 +1,18 @@
+# Usage:
+# .\CopyFilesWithRegex.ps1 -sourcePath '.\in' -destinationPath '.\out' -noDestinationFolderNesting -datesFromRegex -regexPattern '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?:(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|WA\d{4}).(?:JPE?G|MP4|jpe?g|mp4)$'
+
 param (
     [Parameter(Mandatory = $true)]
     [string]$sourcePath,
+    [Parameter(Mandatory = $true)]
+    [string]$destinationPath,
 
     [Parameter(Mandatory = $true)]
     [string]$regexPattern,
     # Good Example: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2}).(?:JPE?G|MP4|jpe?g|mp4)$'
     # Example including WhatsApp old format: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?:(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|WA\d{4}).(?:JPE?G|MP4|jpe?g|mp4)$'
 
-    [Parameter(Mandatory = $true)]
-    [string]$destinationPath,
-
     [switch]$noDestinationFolderNesting,
-
     [switch]$datesFromRegex
 )
 
