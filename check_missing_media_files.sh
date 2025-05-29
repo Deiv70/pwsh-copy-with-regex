@@ -34,8 +34,8 @@ if [ ! -s "$DEST_PATH/$MISSING_FILES_FILENAME" ]; then
 fi
 
 [ -f "$DEST_PATH/$MISSING_FILEPATHS_FILENAME" ] && rm "$DEST_PATH/$MISSING_FILEPATHS_FILENAME"
-touch "$DEST_PATH"/"$MISSING_FILEPATHS_FILENAME"
+touch "$DEST_PATH/$MISSING_FILEPATHS_FILENAME"
 while read -r fileName; do
     echo "$fileName :"
-    grep "$fileName" "$ORIGIN_PATH/$INDEX_FILENAME" | tee -a "$DEST_PATH/$MISSING_FILEPATHS_FILENAME"
+    awk -F/ -v fileName="$fileName" '$NF == fileName { print }' "$ORIGIN_PATH/$INDEX_FILENAME" | tee -a "$DEST_PATH/$MISSING_FILEPATHS_FILENAME"
 done < "$DEST_PATH/$MISSING_FILES_FILENAME"
