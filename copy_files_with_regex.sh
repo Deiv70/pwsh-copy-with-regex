@@ -1,62 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Usage:
-# ./copy_files_with_regex.sh <sourcePath> <regexPattern> <destinationPath> [--noDestinationFolderNesting] [--datesFromRegex]
+SOURCE_PATH=""
+DESTINATION_PATH=""
+ONLY_PRINT=false
+CHANGE_FILENAME=true
+NO_NESTING=true
+DATES_FROM_REGEX=true
+REGEX_PATTERN='(?:(?:IMG|VID)[_-]+)?(?<year>\d{4})[_-]?(?<month>\d{2})[_-]?(?<day>\d{2})[_-]+(?:(?<hours>\d{2})[_-]?(?<minutes>\d{2})[_-]?(?<seconds>\d{2})|WA(?<hours_wa>\d{2})(?<minutes_wa>\d{2})(?:[~_-].*)?)\.(?:jpe?g|png|mp4)$'
+# Good Example:
+# '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2}).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
+# Example including WhatsApp old format:
+# '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?:(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|WA(?<hours_wa>\d{2})(?<minutes_wa>\d{2})).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
 
-set -e
-
-SOURCE_PATH="$1"
-REGEX_PATTERN="$2"
-DEST_PATH="$3"
-NO_NESTING=false
-DATES_FROM_REGEX=false
-
-for arg in "$@"; do
-  if [[ "$arg" == "--noDestinationFolderNesting" ]]; then
-    NO_NESTING=true
-  elif [[ "$arg" == "--datesFromRegex" ]]; then
-    DATES_FROM_REGEX=true
-  fi
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --only-print-paths) ONLY_PRINT=true; shift ;;
+    --regex-pattern) REGEX_PATTERN="$2"; shift 2 ;;
+    --dates-from-regex) DATES_FROM_REGEX=true; shift ;;
+    --change-file-name) CHANGE_FILENAME=true; shift ;;
+    --no-destination-folder-nesting) NO_NESTING=true; shift ;;
+    --source-path) SOURCE_PATH="$2"; shift 2 ;;
+    --destination-path) DESTINATION_PATH="$2"; shift 2 ;;
+    *) echo "Unknown arg: $1" >&2; exit 1 ;;
+  esac
 done
 
-# Create destination path
-mkdir -p "$DEST_PATH"
-
-# Iterate through matching files
-find "$SOURCE_PATH" -type f | while read -r file; do
-  filename=$(basename "$file")
-
-  if [[ "$filename" =~ $REGEX_PATTERN ]]; then
-    # Extract date components if requested
-    if $DATES_FROM_REGEX; then
-      year="${BASH_REMATCH[1]}"
-      month="${BASH_REMATCH[2]}"
-      day="${BASH_REMATCH[3]}"
-      hours="${BASH_REMATCH[4]}"
-      minutes="${BASH_REMATCH[5]}"
-      seconds="${BASH_REMATCH[6]}"
-    fi
-
-    # Build destination path
-    if $NO_NESTING; then
-      relativePath="$filename"
-    else
-      relativePath="${file#$SOURCE_PATH/}"
-    fi
-
-    destFile="$DEST_PATH/$relativePath"
-    destDir=$(dirname "$destFile")
-    mkdir -p "$destDir"
-
-    cp -p "$file" "$destFile"
-
-    # Set timestamps
-    if $DATES_FROM_REGEX; then
-      timestamp="$year-$month-$day $hours:$minutes:$seconds"
-      touch -d "$timestamp" "$destFile"
-    else
-      # Preserve original timestamps
-      touch -r "$file" "$destFile"
-    fi
-  fi
-done
+[[ -n "$SOURCE_PATH" && -n "$DESTINATION_PATH" && -n "$REGEX_PATTERN" ]] || {
+  echo "Missing required args" >&2
+  exit 1
+}
+#echo "perl ./copy_files_with_regex.pl '${SOURCE_PATH}' '${DESTINATION_PATH}' '${REGEX_PATTERN}' '${ONLY_PRINT}' '${CHANGE_FILENAME}' '${NO_NESTING}' '${DATES_FROM_REGEX}'"
+perl ./copy_files_with_regex.pl "${SOURCE_PATH}" "${DESTINATION_PATH}" "${REGEX_PATTERN}" "${ONLY_PRINT}" "${CHANGE_FILENAME}" "${NO_NESTING}" "${DATES_FROM_REGEX}"

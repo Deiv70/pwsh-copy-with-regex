@@ -9,8 +9,8 @@ param (
 
 	[Parameter(Mandatory = $true)]
 	[string]$regexPattern,
-	# Good Example: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2}).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
-	# Example including WhatsApp old format: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?:(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|WA\d{4}).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
+	# Sin WA: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2}).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
+	# Con WA: '(?:IMG|VID)[_-](?<year>\d{4})(?<month>\d{2})(?<day>\d{2})[_-](?:(?<hours>\d{2})(?<minutes>\d{2})(?<seconds>\d{2})|WA(?<hours_wa>\d{2})(?<minutes_wa>\d{2})).(?:JPE?G|PNG|MP4|jpe?g|png|mp4)$'
 
 	[switch]$onlyPrintPaths,
 	[switch]$changeFileName,
@@ -37,13 +37,13 @@ else {
 			$year = [int]$Matches['year']
 			$month = [int]$Matches['month']
 			$day = [int]$Matches['day']
-			$hours = [int]$Matches['hours']
-			$minutes = [int]$Matches['minutes']
+			$hours = if ($Matches['hours'].Success)		{ [int]$Matches['hours'] }		else	{ [int]$Matches['hours_wa'] }
+			$minutes = if ($Matches['minutes'].Success)	{ [int]$Matches['minutes'] }	else	{ [int]$Matches['minutes_wa'] }
 			$seconds = [int]$Matches['seconds']
 		}
 
 		if ($changeFileName) {
-			$fileName = $year + '_' + $month + '_' + $day + '-' + $hours + '_' + $minutes + '_' + $seconds + $file.Extension
+			$fileName = "{0:D4}_{1:D2}_{2:D2}-{3:D2}_{4:D2}_{5:D2}{6}" -f $year, $month, $day, $hours, $minutes, $seconds, $file.Extension
 		}
 		else {
 			$fileName = $file.Name
